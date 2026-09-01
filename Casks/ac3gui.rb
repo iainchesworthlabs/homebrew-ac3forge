@@ -23,15 +23,24 @@
 # documents for the sibling Formula: bump version, recompute sha256 from
 # that release's own ac3forge-*-Darwin.dmg, validate locally, then copy into
 # the tap.
+#
+# DR8: the .dmg this Cask installs is universal (arm64 + x86_64) as of the
+# release that added .github/workflows/_build.yml's package-macos-universal
+# job - arm64-macos-llvm was the only vcpkg triplet macOS CI built against
+# before that; x64-macos-llvm is now its sibling, built for real on GitHub's
+# macos-15-intel runner (native Intel hardware, not Rosetta) and lipo-merged
+# with the arm64 build's own install tree rather than either one shipping
+# alone. No `depends_on arch:` line any more for exactly that reason - the
+# same .dmg installs on both architectures.
 cask "ac3gui" do
-  version "0.9.0-beta.1"
+  version "0.10.0-beta.1"
   # Pinned from v0.9.0-beta.1's actual release asset (GitHub's own reported
   # digest for ac3forge-0.9.0-Darwin.dmg - the same CPACK_PACKAGE_CHECKSUM
   # SHA512 cmake/Packaging.cmake also computes and publishes alongside it,
   # just a different digest algorithm; Homebrew Casks pin sha256). If
   # `brew install` reports a mismatch, trust brew's reported hash over this
   # one and update it here.
-  sha256 "fa79d65a560d2c662698a73e0bb88f09bf91970cabfc937c406f783482f3a596"
+  sha256 "50c7ce9aa0b22c0a4473f4b6156d46d1fea3c94090f5515b83df7f17a463b3db"
 
   # CPack's dmg filename carries only MAJOR.MINOR.PATCH
   # (cmake/Packaging.cmake's CPACK_PACKAGE_FILE_NAME), dropping any
@@ -47,10 +56,13 @@ cask "ac3gui" do
   desc "Qt6 GUI for ac3forge, a clean-room AC-3/E-AC-3 encoder, decoder and Atmos object-layer toolkit"
   homepage "https://github.com/iainchesworthlabs/ac3forge"
 
-  # arm64-macos-llvm is the only vcpkg triplet macOS CI builds against
-  # (cmake/toolchains/macos.llvm.toolchain.cmake) - there is no x86_64 macOS
-  # leg or release artifact to fall back to.
-  depends_on arch:  :arm64
+  # No `depends_on arch:` restriction (DR8): the .dmg is a universal binary,
+  # lipo-merged from a real arm64 build (macos-llvm, Apple Silicon) and a
+  # real x86_64 build (macos-llvm-x64, GitHub's native-Intel macos-15-intel
+  # runner) by .github/workflows/_build.yml's package-macos-universal job -
+  # see that job's own header for how, and docs/platforms/macos.md for the
+  # verified-in-CI-only caveat that still applies to both architectures now.
+  #
   # cmake/toolchains/macos.llvm.toolchain.cmake pins CMAKE_OSX_DEPLOYMENT_TARGET
   # to 13.3 (Ventura) for C++23 libc++ feature availability - see that
   # file's own header comment.
